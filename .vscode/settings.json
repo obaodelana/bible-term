@@ -1,0 +1,16 @@
+{
+    "files.associations": {
+        "ncurses.h": "c",
+        "input-field.h": "c",
+        "stdbool.h": "c",
+        "helper-functions.h": "c",
+        "stdlib.h": "c",
+        "verse_selector.h": "c",
+        "sqlite3.h": "c",
+        "bible-display.h": "c",
+        "*.tcc": "c",
+        "string": "c",
+        "istream": "c",
+        "db.h": "c"
+    }
+}
