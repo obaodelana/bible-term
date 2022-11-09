@@ -13,6 +13,8 @@ static size_t bookInf, chapterInf, verseInf;
 static char book[20] = "Genesis";
 static int chapter = 1, verse = 1;
 
+static MEVENT mouseEvent;
+
 static bool book_callback(const char *);
 static bool chapter_callback(float);
 static bool verse_callback(float);
@@ -33,8 +35,8 @@ int main(int argc, char **argv)
     cbreak(); // Make input immediately available to program (but still process signals)
     curs_set(FALSE); // Disable cursor
     keypad(stdscr, true); // Allow function and arrow keys and mouse
-    // Capture mouse movement and check for left mouse button click
-    mousemask(REPORT_MOUSE_POSITION | BUTTON1_CLICKED, NULL);
+	// Capture mouse
+    mousemask(REPORT_MOUSE_POSITION | BUTTON1_CLICKED | BUTTON4_PRESSED | BUTTON5_PRESSED, NULL); 
     use_default_colors(); // Allows transparent color pairs
     start_color(); // Enable colours
 
@@ -43,8 +45,11 @@ int main(int argc, char **argv)
 
     refresh();
 
+	// Open db of first translation (0)
     open_bible_db(0);
    
+    // Set up input fields
+
     bookInf = inf_new_text
     (
         (Rect) {.w = COLS / 2, .h = 1, .x = 1, .y = LINES - 3},
@@ -70,10 +75,15 @@ int main(int argc, char **argv)
         &verse_callback
     );
 
+	// Show translation text
     translation_selection();
 
+	// Setup window for bible text
     init_bible();
     
+	// If bible path is specified, load it
+	// Else, use previous one
+	// 	Or if first time, use Genesis 1
     load_bible_path(argc, argv);
 
     int c;
@@ -81,20 +91,32 @@ int main(int argc, char **argv)
     {
         if (c == KEY_UP || c == KEY_DOWN)
             scroll_bible(c == KEY_UP);
+		// Scroll wheel
+		else if (getmouse(&mouseEvent) == OK)
+		{
+			// BUTTON4_PRESSED -> scroll up
+			// BUTTON5_PRESSED -> scroll down
+			if (mouseEvent.bstate & BUTTON4_PRESSED || mouseEvent.bstate & BUTTON5_PRESSED)
+				scroll_bible(mouseEvent.bstate & BUTTON4_PRESSED);
+		}
         else if (c == KEY_LEFT || c == KEY_RIGHT)
+			// Change bible chapter or book
             hor_nav(c == KEY_RIGHT);
         else if (c == '\t' || c == 353 /* shift-tab */)
         {
             change_translation(c == '\t');
             
             reset_bible_start();
+			// If able to get bible from db
             if (store_bible_text(book, chapter, verse))
                 display_bible(verse);
         }
 
+		// Update all input fields
         inf_update(c);
     }
 
+	// Cleanup
     inf_cleanup();
     close_bible();
     close_translation();
@@ -107,6 +129,7 @@ int main(int argc, char **argv)
 
 static void load_bible_path(int argCount, char **args)
 {
+	// If bible path is passed as an argument correctly
     if (argCount == 3 && isdigit(args[2][0]))
     {
         strncpy(book, args[1], sizeof(book) - 1);
@@ -115,9 +138,11 @@ static void load_bible_path(int argCount, char **args)
 
     else
     {
+		// Use previous bible path
         get_stored_path(book, &chapter, &verse);
     }
 
+	// If previous functions worked properly
     if (strlen(book) > 0 && chapter > 0 && verse > 0)
     {
         int maxChapter = get_max_chapter(book);
@@ -126,6 +151,7 @@ static void load_bible_path(int argCount, char **args)
             int verseCount = get_no_of_verses(book, chapter);
             if (verse <= verseCount)
             {
+				// If access to db was successful
                 if (store_bible_text(book, chapter, verse))
                 {
                     inf_set_text_value(bookInf, book);
@@ -215,6 +241,7 @@ static bool verse_callback(float v)
         FILE *bibleStore = fopen(bibleStorePath, "r+b");
         if (bibleStore != NULL)
         {
+			// Move to correct position in file (after book, chapter and colon)
             fseek(bibleStore, snprintf(NULL, 0, "%s %i:", book, chapter), SEEK_SET);
             fprintf(bibleStore, "%03i", (int) v);
             fclose(bibleStore);
@@ -233,6 +260,8 @@ static bool verse_callback(float v)
     return false;
 }
 
+// Use arrow keys to move from chapter to chapter
+// Or to next or previous book
 static void hor_nav(bool right)
 {
     int maxChapters = get_max_chapter(book);
@@ -253,6 +282,7 @@ static void hor_nav(bool right)
         chapter = 1;
     }
 
+	// Get bible text from new path
     if (store_bible_text(book, chapter, verse))
     {
         inf_set_text_value(bookInf, book);

@@ -95,7 +95,11 @@ static void handle_tag(char* tag)
         wattron(win, A_DIM);
     else if (str_equal(tag, "</v>"))
         wattroff(win, A_DIM);
-    // else if (str_equal(tag, "<pb/>"))
+	else if (str_equal(tag, "<b>"))
+		wattron(win, A_BOLD);
+ 	else if (str_equal(tag, "</b>"))
+		wattroff(win, A_BOLD);
+	// else if (str_equal(tag, "<pb/>"))
     //    wprintw(win, "\n ");
     // else if (str_equal(tag, "<t>"))
     //     waddch(win, '\n');

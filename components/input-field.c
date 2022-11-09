@@ -67,7 +67,7 @@ static InputField* inf_new(Rect rect, const char *placeholder)
     return inf;
 }
 
-// Add to [str] ([add] ∩ [dontAdd])`
+// Add to [str] things in [add] that are not in [dontAdd]
 static void add_to_str(char *str, const char *add, const char *dontAdd)
 {
     if (str != NULL)
@@ -84,7 +84,7 @@ static void add_to_str(char *str, const char *add, const char *dontAdd)
 int inf_new_text(Rect rect, const char *placeholder, INF_AllowedChars allowedChars, const char *forbiddenChars, bool (*onEnterPressed)(const char*))
 {
     // Make sure [allowedChars] is not out of bounds
-    assert(allowedChars > INF_LETTERS_LC && allowedChars < INF_ALL_CHARS);
+    assert(allowedChars >= INF_LETTERS_LC && allowedChars <= INF_ALL_CHARS);
 
     // Create new input field with basic setup
     InputField *inf = inf_new(rect, placeholder);
@@ -94,7 +94,7 @@ int inf_new_text(Rect rect, const char *placeholder, INF_AllowedChars allowedCha
     inf->textField = true;
 
     // Set up allowed characters
-    inf->allowedChars = calloc(100, sizeof(char));
+    inf->allowedChars = calloc(120 + 1, sizeof(char));
     
     // Add to [inf->allowedChars] only allowed characters
 
@@ -116,13 +116,6 @@ int inf_new_text(Rect rect, const char *placeholder, INF_AllowedChars allowedCha
 
     // Return the index of the current input field
     return infsIndex++;
-}
-
-// Max string length is given as the (width of input field) * (line height of input field)
-// Line height is given as (height of input field) - 2. -2 is there because it was added in [inf_new()]
-static inline int get_max_str_len(InputField *inf)
-{
-    return (inf->winDim.w * (inf->winDim.h - 2));
 }
 
 // Special setup for number input fields
@@ -155,6 +148,13 @@ int inf_new_number(Rect rect, const char *placeholder, float min, float max, boo
 
     // Return the index of the current input field
     return infsIndex++;
+}
+
+// Max string length is given as the (width of input field) * (line height of input field)
+// Line height is given as (height of input field) - 2. -2 is there because it was added in [inf_new()]
+static inline int get_max_str_len(InputField *inf)
+{
+    return (inf->winDim.w * (inf->winDim.h - 2));
 }
 
 // Add or remove border
@@ -324,6 +324,7 @@ static bool inf_is_mouse_touching_rect(MEVENT m, Rect rect)
 // Check to see if character is allowed in text field
 static bool inf_validate_text_field(InputField *inf, char ch)
 {
+	// [ch] is part of the allowed characters
     return (strchr(inf->allowedChars, ch) != NULL);
 }
 
