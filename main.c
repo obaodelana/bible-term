@@ -108,7 +108,18 @@ int main(int argc, char **argv)
             reset_bible_start_pos();
 			// If able to get bible from db
             if (store_bible_text(book, chapter, verse))
+			{
                 display_bible(verse);
+
+				// Reset input fields
+				// in case user was typing a new path while tab was hit
+				inf_set_text_value(bookInf, book);
+				inf_set_number_value(chapterInf, chapter);
+				inf_set_number_value(verseInf, verse);
+				
+				// Prompt user to type in book
+				inf_switch_focus(bookInf);
+			}
         }
 
 		// Update all input fields
@@ -153,10 +164,12 @@ static void load_bible_path(int argCount, char **args)
 				// If access to db was successful
                 if (store_bible_text(book, chapter, verse))
                 {
+					// Set the values of the input fields to the gotten bible path
                     inf_set_text_value(bookInf, book);
                     inf_set_number_value(chapterInf, chapter);
                     inf_set_number_value(verseInf, verse);
 
+					// Prompt user to type in book
                     inf_switch_focus(bookInf);
 
                     display_bible(verse);
