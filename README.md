@@ -16,6 +16,7 @@ Btw, `ncurses` is an API for writing terminal applications that (kinda) look lik
 - **Stores your last visited** Bible "path" (book, chapter and verse).
 - **6 Bible translations**: AMPC, KJV, MSG, NKJV, NLT, TLB (press `TAB` to switch translations).
 - **Shows titles** for important parts of Scripture.
+- **Move between chapters and books with the arrow keys** 
 - **Auto completion** when typing in books.
 - **Automatically detects** the translations stored in the `db` folder and displays them.
 - **Shows the maximum** chapters and verses of a book
