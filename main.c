@@ -91,7 +91,7 @@ int main(int argc, char **argv)
         if (c == KEY_UP || c == KEY_DOWN)
             scroll_bible(c == KEY_UP);
 		// Scroll wheel
-		else if (getmouse(&mouseEvent) == OK)
+		else if (c == KEY_MOUSE && getmouse(&mouseEvent) == OK)
 		{
 			// BUTTON4_PRESSED -> scroll up
 			// BUTTON5_PRESSED -> scroll down
