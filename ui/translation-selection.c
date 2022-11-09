@@ -26,7 +26,7 @@ void change_translation(bool next)
     currTranslation += (next ? 1 : -1);
     if (currTranslation > maxIndex)
         currTranslation = 0;
-    else if (currTranslation <= 0)
+    else if (currTranslation < 0)
         currTranslation = maxIndex;
 
     wprintw(win, "%s", get_translation(currTranslation));
