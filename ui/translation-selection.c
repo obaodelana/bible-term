@@ -7,6 +7,7 @@
 WINDOW *win;
 size_t currTranslation = 0;
 
+// Setup window and show first translation
 void translation_selection(void)
 {
     win = newwin(1, 5, LINES - 2, COLS - 5);
@@ -20,10 +21,9 @@ void change_translation(bool next)
 {
     wclear(win), wmove(win, 0, 0);
 
-    currTranslation += (next ? 1 : -1);
-    
     int maxIndex = get_translations() - 1;
 
+    currTranslation += (next ? 1 : -1);
     if (currTranslation > maxIndex)
         currTranslation = 0;
     else if (currTranslation <= 0)
@@ -32,6 +32,7 @@ void change_translation(bool next)
     wprintw(win, "%s", get_translation(currTranslation));
     wrefresh(win);
     
+	// Open db of current translation
     open_bible_db(currTranslation);
 }
 

@@ -25,7 +25,6 @@ static void hor_nav(bool right);
 
 // TODO: Add blinking cursor
 // TODO: Add search
-// TODO: Refactor and document code
 
 int main(int argc, char **argv)
 {
@@ -106,7 +105,7 @@ int main(int argc, char **argv)
         {
             change_translation(c == '\t');
             
-            reset_bible_start();
+            reset_bible_start_pos();
 			// If able to get bible from db
             if (store_bible_text(book, chapter, verse))
                 display_bible(verse);
@@ -161,10 +160,14 @@ static void load_bible_path(int argCount, char **args)
                     inf_switch_focus(bookInf);
 
                     display_bible(verse);
+
+					return;
                 }
             }
         }
     }
+
+	display_bible_error("Couldn't access Bible\nTry pressing [TAB] to change the translation");
 }
 
 static bool book_callback(const char *bk)
@@ -207,7 +210,7 @@ static bool chapter_callback(float ch)
                 inf_set_number_value(verseInf, verseCount);
                 inf_switch_focus(verseInf);
 
-                reset_bible_start();
+                reset_bible_start_pos();
                 display_bible(1);
             }
             
@@ -291,7 +294,7 @@ static void hor_nav(bool right)
 
         inf_switch_focus(verseInf);
 
-        reset_bible_start();
+        reset_bible_start_pos();
         display_bible(verse);
     }
 }
