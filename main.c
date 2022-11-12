@@ -308,6 +308,6 @@ static void hor_nav(bool right)
         inf_switch_focus(verseInf);
 
         reset_bible_start_pos();
-        display_bible(verse);
+        display_bible(0);
     }
 }
