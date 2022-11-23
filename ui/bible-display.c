@@ -109,9 +109,9 @@ static void handle_tag(char* tag)
         wattron(win, A_DIM);
     else if (str_equal(tag, "</v>"))
         wattroff(win, A_DIM);
-	else if (str_equal(tag, "<b>"))
+	else if (str_equal(tag, "<b>") || str_equal(tag, "<e>"))
 		wattron(win, A_BOLD);
- 	else if (str_equal(tag, "</b>"))
+ 	else if (str_equal(tag, "</b>") || str_equal(tag, "</e>"))
 		wattroff(win, A_BOLD);
 	// else if (str_equal(tag, "<pb/>"))
     //    wprintw(win, "\n ");
@@ -175,9 +175,9 @@ void display_bible(int verse)
                 // Tag
                 if (word[0] == '<' && canPrint)
                 {
-					// If the tag is "<f>" or "<e>", skip it
+					// If the tag is "<f>" or "<n>", skip it
 					// i.e., dismiss text in between tag and it's closing tag
-                    if (str_equal(word, "<f>") || str_equal(word, "<e>"))
+                    if (str_equal(word, "<f>") || str_equal(word, "<n>"))
                     {
                         str = strchr(str, '>') + 1;
                         if (*str == ' ') str++;
@@ -187,6 +187,10 @@ void display_bible(int verse)
                     {
                         handle_tag(word);
                     }
+
+                    // Add space after tag, if needed
+                    if (*str == ' ')
+                        waddch(win, ' ');
                 }
 
                 else
@@ -242,6 +246,7 @@ void display_bible(int verse)
                 wprintw(win, "\n\n");
                 
 				// If we exceed the terminal's height
+				// That is, the cursor doesn't move down by 2 after printing 2 newlines
                 if (getcury(win) < cursorY + 2)
                     break;
             }
