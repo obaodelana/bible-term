@@ -125,155 +125,160 @@ static void handle_tag(char* tag)
 void display_bible(int verse)
 {
     FILE *bible = fopen(bibleStorePath, "r");
-    if (bible != NULL)
-    {
-        wclear(win), wmove(win, 0, 0);
-        wattrset(win, A_NORMAL);
-        
-        char *line = malloc(1);
-        size_t lineSize = 1;
+    if (bible == NULL)
+		return;
+		
+	wclear(win), wmove(win, 0, 0);
+	wattrset(win, A_NORMAL);
+	
+	char *line = malloc(1);
+	size_t lineSize = 1;
 
-        // Get first line (and throw it away, kinda)
-        getline(&line, &lineSize, bible);
+	// Get first line (and throw it away, kinda)
+	getline(&line, &lineSize, bible);
 
-        int cursorY = 0, charCount = 0;
-        int currTermLine = 1, currVerse = 1;
-        bool canPrint = false;
-        char word[25 + 1] = "";
-        
-        // Get each line in file until end-of-file
-        while((getline(&line, &lineSize, bible) != EOF)
-            // Stop when cursor reaches window height
-            && getcury(win) < h)
-        {
-            const char *str = line;
-			// Not all lines are verses e.g., titles
-			bool isAVerse = false;
-            while (*str != '\0' && *str != '\n')
-            {	
-                cursorY = getcury(win);
+	int cursorY = 0, charCount = 0;
+	int currTermLine = 1, currVerse = 1;
+	bool canPrint = false, lastSpace = false;
+	char word[25 + 1] = "";
+	
+	// Get each line in file until end-of-file
+	while((getline(&line, &lineSize, bible) != EOF)
+		// Stop when cursor reaches window height
+		&& getcury(win) < h)
+	{
+		const char *str = line;
+		// Not all lines are verses e.g., titles
+		bool isAVerse = false;
+		while (*str != '\0' && *str != '\n')
+		{	
+			cursorY = getcury(win);
 
-                int wordLen = get_word(str, word); 
-                str += wordLen;
+			int wordLen = get_word(str, word); 
+			str += wordLen;
 
-				// Verses starting with a "<v>"
-				if (str_equal(word, "<v>"))
-					isAVerse = true;
+			// Verses starting with a "<v>"
+			if (str_equal(word, "<v>"))
+				isAVerse = true;
 
-				// Print if at correct cursor location
-				// [startTermLine] is the line the user is currently reading
-                if ((verse <= 1 && currTermLine >= startTermLine)
-				// OR verse
-                    || verse == currVerse)
-                {
-                    canPrint = true;
-                    if (verse > 1)
-						// Save the line where the verse occurs
-                        startTermLine = currTermLine;
-                }
-                
-                // Tag
-                if (word[0] == '<' && canPrint)
-                {
-					// If the tag is "<f>" or "<n>", skip it
-					// i.e., dismiss text in between tag and it's closing tag
-                    if (str_equal(word, "<f>") || str_equal(word, "<n>"))
-                    {
-                        str = strchr(str, '>') + 1;
-                        if (*str == ' ') str++;
-                    }
+			// Print if at correct cursor location
+			// [startTermLine] is the line the user is currently reading
+			if ((verse <= 1 && currTermLine >= startTermLine)
+			// OR verse
+				|| verse == currVerse)
+			{
+				canPrint = true;
+				if (verse > 1)
+					// Save the line where the verse occurs
+					startTermLine = currTermLine;
+			}
+			
+			// Tag
+			if (word[0] == '<' && canPrint)
+			{
+				// If the tag is "<f>" or "<n>", skip it
+				// i.e., dismiss text in between tag and it's closing tag
+				if (str_equal(word, "<f>") || str_equal(word, "<n>"))
+				{
+					str = strchr(str, '>') + 1;
+					if (*str == ' ') str++;
+				}
 
-                    else
-                    {
-                        handle_tag(word);
-                    }
+				else
+				{
+					handle_tag(word);
+					// Add space after tag, if needed
+					if (*str == ' ' && !lastSpace)
+						waddch(win, ' ');
+				}
+			}
 
-                    // Add space after tag, if needed
-                    if (*str == ' ')
-                        waddch(win, ' ');
-                }
+			else
+			{
+				charCount += (wordLen + (*str == ' '));
+				// Implement word wrap
+				// If the number of characters on the screen + number of characters about to be printed
+				// 	is greater than the width of the terminal, go to a new line
+				if (charCount >= w)
+				{
+					// Number of characters on new line is the length of the word to be printed
+					charCount = wordLen + (*str == ' ');
+					currTermLine++;
 
-                else
-                {
-                    charCount += (wordLen + (*str == ' '));
-					// Implement word wrap
-					// If the number of characters on the screen + number of characters about to be printed
-					// 	is greater than the width of the terminal, go to a new line
-                    if (charCount >= w)
-                    {
-						// Number of characters on new line is the length of the word to be printed
-                        charCount = wordLen + (*str == ' ');
-                        currTermLine++;
+					// If allowed to print
+					if (canPrint
+						// and last word didn't push cursor to the next line
+						//  (if cursor is pushed to the next line, its x-pos will be at 0)
+						&& getcurx(win) != 0)
+					{
+						waddch(win, '\n');
+						// If we're at the max height (terminal screen height)
+						if (getcury(win) == cursorY)
+							goto break2;
+						else
+							// Save new cursor position
+							cursorY = getcury(win);
+					}
+				}
 
-                        if (canPrint)
-                        {
-                            waddch(win, '\n');
-							// If we're at the max height (terminal screen height)
-                            if (getcury(win) == cursorY)
-                                goto break2;
-                            else
-								// Save new cursor position
-                                cursorY = getcury(win);
-                        }
-                    }
+				if (canPrint)
+				{
+					wprintw(win, "%s", word);
+					
+					// If after printing word, cursor moves to next line
+					if (getcury(win) != cursorY)
+					{
+						// Reset [charCount] to number of characters on new line (should be 0)
+						charCount = getcurx(win);
+						currTermLine++;
+					}
 
-                    if (canPrint)
-                    {
-                        wprintw(win, "%s", word);
-                        
-						// If after printing word, cursor moves to next line
-                        if (getcury(win) != cursorY)
-                        {
-							// Reset [charCount] to number of characters on new line (should be 0)
-                            charCount = getcurx(win);
-                            currTermLine++;
-                        }
+					else if (*str == ' ')
+					{
+						waddch(win, ' ');
+					}
 
-                        else if (*str == ' ')
-                        {
-                            waddch(win, ' ');
-                        }
-                    }
-                }
+					lastSpace = (*str == ' ');
+				}
+			}
 
-                if (*str == ' ') str++;
-            }
+			if (*str == ' ') str++;
+		}
 
-            if (canPrint)
-            {
-                cursorY = getcury(win);
+		if (canPrint)
+		{
+			cursorY = getcury(win);
 
-                wprintw(win, "\n\n");
-                
-				// If we exceed the terminal's height
-				// That is, the cursor doesn't move down by 2 after printing 2 newlines
-                if (getcury(win) < cursorY + 2)
-                    break;
-            }
+			wprintw(win, "\n\n");
+			
+			// If we exceed the terminal's height
+			// That is, the cursor doesn't move down by 2 after printing 2 newlines
+			if (getcury(win) < cursorY + 2)
+				break;
+		}
 
-			// If we're at the end of the text file, don't allow futher movement
-            if (feof(bible))
-            {
-                startTermLine--;
-            }
+		// If we're at the end of the text file, don't allow further movement
+		if (feof(bible))
+		{
+			startTermLine--;
+		}
 
-            else
-            {
-                currTermLine += 2;
-                charCount = 0;
-				if (isAVerse) currVerse++;
-            }
-        }
+		else
+		{
+			currTermLine += 2;
+			charCount = 0;
+			if (isAVerse) currVerse++;
+		}
+	}
 
-		// For breaking out of double while loops (see line ~209)
-        break2:
+	// For breaking out of double while loops (see line ~209)
+	break2:
 
-        free(line);
+	free(line);
 
-        wrefresh(win);
+	wrefresh(win);
 
-        fclose(bible);
-    }
+	fclose(bible);
 }
 
 // Display error (in a red colour) in bible window
