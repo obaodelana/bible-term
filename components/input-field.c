@@ -44,7 +44,7 @@ static InputField* inf_new(Rect rect, const char *placeholder)
     nodelay(inf->win, true); // Don't stop when asked for input
     keypad(inf->win, true); // Allow to read arrow and functions keys, and allows mouse event to work properly
     if (infsIndex == 0) box(inf->win, 0, 0); // Place border around first input field
-    mvwprintw(inf->win, 1, 1, placeholder); // Print placeholder text inside window
+    mvwprintw(inf->win, 1, 1, "%s", placeholder); // Print placeholder text inside window
     wrefresh(inf->win); // Refresh window to show text printed above
     
     // Save placeholder text in [str]
@@ -244,7 +244,7 @@ bool inf_set_text_value(size_t i, const char *newText)
             inf->strLen = strlen(newText);
 
             // Show the new text
-            mvwprintw(inf->win, 1, 1, newText);
+            mvwprintw(inf->win, 1, 1, "%s", newText);
             wrefresh(inf->win);
 
             return true;
@@ -281,7 +281,7 @@ bool inf_set_number_value(size_t i, float newNumber)
                 inf->strLen = strlen(newText);
 
                 // Show the new text
-                mvwprintw(inf->win, 1, 1, newText);
+                mvwprintw(inf->win, 1, 1, "%s", newText);
                 wrefresh(inf->win);
 
                 return true;

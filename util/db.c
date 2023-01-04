@@ -224,7 +224,7 @@ static bool get_title(const char *book, int chapter, int verse, char *title)
 								// Clear [title]
 								memset(title, 0, strlen(title));
 								// Copy text returned to [title]
-								strncpy(title, sqlite3_column_text(sql, 0), 100);
+								strncpy(title, (const char*) sqlite3_column_text(sql, 0), 100);
 
 								// If title is not an empty string, it has a title
 								hasTitle = strlen(title) > 0;
@@ -285,7 +285,7 @@ bool store_bible_text(const char *book, int chapter, int verse)
 							// Verse number
 							fprintf(bibleStore, "<v>[%i] </v>", verse++);
 							// Verse text
-							fprintf(bibleStore, "%s", sqlite3_column_text(sql, 0));
+							fprintf(bibleStore, "%s", (const char*) sqlite3_column_text(sql, 0));
                         } while (sqlite3_step(sql) == SQLITE_ROW);
                     }
 
@@ -336,7 +336,7 @@ bool get_book(char *currBook, int option)
                 if (sqlite3_step(sql) == SQLITE_ROW)
                 {
 					// Save returned string to [currBook]
-                    strcpy(currBook, sqlite3_column_text(sql, 0));
+                    strcpy(currBook, (const char*) sqlite3_column_text(sql, 0));
                     gotten = true;
                 }
             }

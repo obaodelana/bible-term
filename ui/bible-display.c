@@ -1,3 +1,5 @@
+// Allows getline to work on MacOS
+#define  _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -287,7 +289,7 @@ void display_bible_error(const char *error)
     wclear(win), wmove(win, 0, 0);
 
     wattron(win, COLOR_PAIR(RED_COLOUR));
-    wprintw(win, error);
+    wprintw(win, "%s", error);
     wattroff(win, COLOR_PAIR(RED_COLOUR));
 
     wrefresh(win);
