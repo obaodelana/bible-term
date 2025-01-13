@@ -7,6 +7,7 @@
 #include "ui/bible-display.h"
 #include "util/store.h"
 #include "ui/translation-selection.h"
+#include "util/logger.h"
 
 static size_t bookInf, chapterInf, verseInf;
 
@@ -16,6 +17,7 @@ static int chapter = 1, verse = 1;
 static MEVENT mouseEvent;
 
 static bool book_callback(const char *);
+// We're using floats because they can be down-casted to ints
 static bool chapter_callback(float);
 static bool verse_callback(float);
 
@@ -24,7 +26,6 @@ static void load_bible_path(int argCount, char **args);
 static void hor_nav(bool right);
 
 // TODO: Add blinking cursor
-// TODO: Add search
 
 int main(int argc, char **argv)
 {
@@ -46,6 +47,8 @@ int main(int argc, char **argv)
 
 	// Open db of first translation (0)
     open_bible_db(0);
+
+	enable_logging();
    
     // Set up input fields
 
@@ -89,7 +92,10 @@ int main(int argc, char **argv)
     while(tolower(c = getch()) != 'q')
     {
         if (c == KEY_UP || c == KEY_DOWN)
+		{
             scroll_bible(c == KEY_UP);
+		}
+
 		// Scroll wheel
 		else if (c == KEY_MOUSE && getmouse(&mouseEvent) == OK)
 		{
@@ -98,9 +104,13 @@ int main(int argc, char **argv)
 			if (mouseEvent.bstate & BUTTON4_PRESSED || mouseEvent.bstate & BUTTON5_PRESSED)
 				scroll_bible(mouseEvent.bstate & BUTTON4_PRESSED);
 		}
+
         else if (c == KEY_LEFT || c == KEY_RIGHT)
+		{
 			// Change bible chapter or book
             hor_nav(c == KEY_RIGHT);
+		}
+
         else if (c == '\t' || c == 353 /* shift-tab */)
         {
             change_translation(c == '\t');
@@ -109,6 +119,7 @@ int main(int argc, char **argv)
 			// If able to get bible from db
             if (store_bible_text(book, chapter, verse))
 			{
+				log_bool(TRUE, "store_bible_text");
                 display_bible(verse);
 
 				// Reset input fields
@@ -120,6 +131,15 @@ int main(int argc, char **argv)
 				// Prompt user to type in book
 				inf_switch_focus(bookInf);
 			}
+
+			else
+			{
+				log_bool(FALSE, "store_bible_text");
+			}
+
+			// Shift-tab prints a character, so this avoids that
+			// by not updating the input fields
+			continue;
         }
 
 		// Update all input fields
@@ -131,6 +151,7 @@ int main(int argc, char **argv)
     close_bible();
     close_translation();
     close_db();
+	close_logging();
 
     endwin();
 
@@ -174,17 +195,20 @@ static void load_bible_path(int argCount, char **args)
 
                     display_bible(verse);
 
-					return;
+					return; // Avoids printing the error below
                 }
             }
         }
     }
 
+	// If there was an error in the above functions
 	display_bible_error("Couldn't access Bible\nTry pressing [TAB] to change the translation");
 }
 
+// TODO: Implement search here
 static bool book_callback(const char *bk)
 {
+	// Longest book is at most 19 characters long
     strncpy(book, bk, 19);
 
     int maxChapter = get_max_chapter(bk);
