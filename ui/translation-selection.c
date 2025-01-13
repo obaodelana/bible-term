@@ -3,9 +3,10 @@
 #include "../util/store.h"
 #include "../util/db.h"
 #include "translation-selection.h"
+#include "bible-display.h"
 
 WINDOW *win;
-size_t currTranslation = 0;
+int currTranslation = 0;
 
 // Setup window and show first translation
 void translation_selection(void)
@@ -25,15 +26,24 @@ void change_translation(bool next)
 
     currTranslation += (next ? 1 : -1);
     if (currTranslation > maxIndex)
+	{
         currTranslation = 0;
+	}
+
     else if (currTranslation < 0)
+	{
         currTranslation = maxIndex;
+	}
 
     wprintw(win, "%s", get_translation(currTranslation));
     wrefresh(win);
     
 	// Open db of current translation
-    open_bible_db(currTranslation);
+    if (open_bible_db(currTranslation) == false)
+	{
+		display_bible_error("Failed to switch to selected translation.\n"
+			"Press [TAB] to try another translation");
+	}
 }
 
 void close_translation(void)
