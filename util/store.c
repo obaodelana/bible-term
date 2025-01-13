@@ -48,8 +48,10 @@ void get_stored_path(char *book, int *chapter, int *verse)
         }
 
         else
+		{
 			// (book e.g. John) (chapter):(verse)
             sscanf(biblePath, "%19s %d%*c%d", book, chapter, verse);
+		}
 
         free(biblePath);
     }
@@ -81,11 +83,18 @@ int get_translations(void)
             // If file name has the extension ".SQLITE3"
             if (strstr(file->d_name, ".SQLite3"))
             {
+				translationCount++;
+
 				// Memory allocation for an expanding list
-                if (translationCount++ == 0)
+                if (translationCount == 1)
+				{
                     translations = (char**) calloc(1, sizeof(char*));
+				}
+
                 else
+				{
                     translations = (char**) realloc(translations, sizeof(char*) * translationCount);
+				}
                 
 				// Length of bible translation
 				// Find the distance from the period to the first letter
@@ -100,7 +109,8 @@ int get_translations(void)
 
         closedir(dir);
 
-        return (noOfTranslations = translationCount);
+		noOfTranslations = translationCount;
+        return noOfTranslations;
     }
 
     return 0;

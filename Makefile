@@ -20,6 +20,10 @@ default: $(FILES)
 lib/sqlite/sqlite3.o: lib/sqlite/sqlite3.c
 	@cd lib/sqlite; $(CC) -c sqlite3.c
 
+reset:
+	@$(RM) .log
+	@$(RM) .bibleStore
+
 clean:
 	$(RM) lib/sqlite/sqlite3.o
 	$(RM) $(TARGET)

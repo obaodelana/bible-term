@@ -26,3 +26,4 @@ Yeah, you can probably see I put a lot effort into this 😅.
 
 ---
 Type `make` and run `./bible` to try it out.
+(If you're using a mac, get the latest version of ncurses with `brew install ncurses`)
