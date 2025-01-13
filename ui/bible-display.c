@@ -251,6 +251,11 @@ void display_bible(int verse)
 		{
 			cursorY = getcury(win);
 
+			// If you're already on a new line
+			if (getcurx(win) == 0)
+			 	// Delete new line
+				wdelch(win);
+
 			wprintw(win, "\n\n");
 			
 			// If we exceed the terminal's height
