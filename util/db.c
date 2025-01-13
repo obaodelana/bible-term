@@ -1,5 +1,6 @@
 #include "db.h"
 #include "store.h"
+#include <ctype.h>
 #include <ncurses.h>
 
 const char bibleStorePath[] = ".bibleStore";
@@ -81,19 +82,18 @@ bool open_bible_db(size_t index)
 
 			// If couldn't open db, still close it
             else
+			{
                 sqlite3_close(db);
+			}
         }
 
 		// If db is already opened, close it and open a new one
 		// This is run when a new translation is needed
         else
         {
-            sqlite3_close(db);
+			close_db();
 
-            db = NULL;
-            initialized = false;
-
-            return open_bible_db(index);
+			return open_bible_db(index);
         }
     }
 
@@ -103,7 +103,12 @@ bool open_bible_db(size_t index)
 void close_db(void)
 {
     if (db != NULL)
-        sqlite3_close(db);
+	{
+		sqlite3_close(db);
+
+		db = NULL;
+		initialized = false;
+	}
 }
 
 static bool check_init(void)
@@ -255,7 +260,9 @@ bool store_bible_text(const char *book, int chapter, int verse)
     if (rc == SQLITE_OK)
     {
 		// Change question mark in sql statement to [text]
-        rc = sqlite3_bind_text(sql, 1, book, -1, SQLITE_STATIC);
+		char text[strlen(book) + 2];
+        appendPercent(text, book);
+        rc = sqlite3_bind_text(sql, 1, text, -1, SQLITE_STATIC);
 
         if (rc == SQLITE_OK)
         {
@@ -288,7 +295,6 @@ bool store_bible_text(const char *book, int chapter, int verse)
 							fprintf(bibleStore, "%s", (const char*) sqlite3_column_text(sql, 0));
                         } while (sqlite3_step(sql) == SQLITE_ROW);
                     }
-
 
                     fclose(bibleStore);
                     
@@ -338,6 +344,14 @@ bool get_book(char *currBook, int option)
 					// Save returned string to [currBook]
                     strcpy(currBook, (const char*) sqlite3_column_text(sql, 0));
                     gotten = true;
+
+	 				int n = strlen(currBook);
+					// If books ends with whitespace
+					if (isspace(currBook[n - 2]))
+					{
+						// Remove it
+						currBook[n - 2] = '\0';
+					}
                 }
             }
         }
