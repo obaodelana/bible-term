@@ -15,7 +15,7 @@ void enable_logging()
 	LOGGER = fopen(LOG_FILE, "a");
 }
 
-static void log(const char *tag)
+static void log_with_tag(const char *tag)
 {
 	time_t now;
 	time(&now);
@@ -29,21 +29,21 @@ static void log(const char *tag)
 
 void log_string(const char* str, const char* tag)
 {
-	log(tag);
+	log_with_tag(tag);
 	fprintf(LOGGER, "%s\n", str);
 	fflush(LOGGER);
 }
 
 void log_int(int i, const char* tag)
 {
-	log(tag);
+	log_with_tag(tag);
 	fprintf(LOGGER, "%i\n", i);
 	fflush(LOGGER);
 }
 
 void log_bool(bool b, const char* tag)
 {
-	log(tag);
+	log_with_tag(tag);
 	fprintf(LOGGER, "%s\n", (b ? "TRUE" : "FALSE"));
 	fflush(LOGGER);
 }
